@@ -1,0 +1,14 @@
+{
+  "name": "churrolisp",
+  "version": "0.0.0",
+  "description": "Very simple implementation of a pseudo-Lisp language",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "José Luis C.D.",
+  "license": "GPL",
+  "dependencies": {
+    "jison": "~0.4.16"
+  }
+}
