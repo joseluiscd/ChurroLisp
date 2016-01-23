@@ -13,13 +13,15 @@ parser that Jison generated for us:
             "if": (i, env, cond, t, f) -> return if cond then t else f
             "+": (i, env, a, b) -> return a+b
 
-            "seq": (i, env, expressions...) ->
+            "seq": (i, env, expressions...) -> #Sequential
                 ret=null
                 for x in expressions
                     ret = i.evaluate x, env
-            "co": (i, env, expressions...) ->
+            "co": (i, env, expressions...) -> #Concurrent (""Concurrent"")
                 ret = null
-                
+                for x in expressions
+                    process.nextTick i.evaluate x, env
+
         }
 
 
@@ -49,7 +51,9 @@ This is the recursive function that will evaluate an expression
                 return list
 
 ## Exec
-Execute the code in the interpreter
+Execute the code in the interpreter with the global environment
+**Input**: Some code to execute
+**Output**: What the code returns
 
         exec: (list) ->
             @evaluate list, @globalenv
