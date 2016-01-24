@@ -1,36 +1,58 @@
 # ChurroLisp Interpreter
-_Code isn't tested yet, so run it at your own risk :wink:_
+
 
 Here we define the basic interpreter of ChurroLisp. First of all, we import the
 parser that Jison generated for us:
 
     parser = require("./churrolisp")
+    {Value, Variable}= require("./tokens")
+    parser.parser.yy = require("./tokens")
+    Environment = require("./environment")
+
+    console.log parser
+
+
     module.exports = class Interpreter
-        globalenv: {
+        globalenv: new Environment
+        defaultFuncs: {
             "list": (i, env, args...) -> return args
-            "var": (i, env, name) -> return env[name]
+            "declare": (i, env, args...) -> env[name]=null
             "set": (i, env, name, value) -> env[name]=value
-            "if": (i, env, cond, t, f) -> return if cond then t else f
-            "+": (i, env, a, b) -> return a+b
+            "if": (i, env, cond, t, f) ->
+                if cond
+                    i.evaluate t, env.sub()
+                else
+                    i.evaluate f, env.sub()
+
+            "+": (i, env, a, b) -> return i.evaluate a,env + i.evaluate b,env
 
             "seq": (i, env, expressions...) -> #Sequential
                 ret=null
                 for x in expressions
                     ret = i.evaluate x, env
+                return ret
+
             "co": (i, env, expressions...) -> #Concurrent (""Concurrent"")
                 ret = null
                 for x in expressions
                     process.nextTick i.evaluate x, env
+                return ret
 
         }
 
+        constructor: (otherEnv)->
+            @globalenv.extend @defaultFuncs
+            console.log @globalenv
+            if otherEnv?
+                @globalenv.extend otherEnv
 
 ## Load
 **Input**: A string with the *Lisp* expression.
 **Output**: The JavaScript list with the parsed expression.
 
         load: (str) ->
-            parser.parse(str)
+            a=parser.parser.parse(str)
+            return a
 
 ## Evaluate
 This is the recursive function that will evaluate an expression
@@ -38,13 +60,15 @@ This is the recursive function that will evaluate an expression
 **Output**: What the list would return
 
         evaluate: (list, env) ->
+            console.log "Evaluating #{list}"
             if typeof list is "object"
-                if list.length isnt 0
-                    switch typeof list[0]
-                        when "string" then return @call list[0], (@evaluate x, env for x in list[1..]), env
-                        ## Add more
-                        else return list[0]
-
+                if list instanceof Variable
+                    #We have to evaluate the variable in the current environment
+                    return env.get list.name
+                if list instanceof Array and list.length isnt 0
+                    #This is a function!!!
+                    if list[0] instanceof Variable then return @call list[0].name, list[1..], env
+                    else return list
                 else
                     return null
             else
@@ -65,16 +89,5 @@ In this function, we choose the coffeescript function to call with the given exp
 **Output**: The value returned by the wrapped function
 
         call: (name, args, env) ->
-            if typeof env[name] is "function"
-                return env[name](@, env, args...)
-
-## Clone
-Helper function to clone environments
-**Input** An environment
-**Output** The clone of the environment
-
-        clone: (env) ->
-            toRet = new env.constructor()
-            for x of env
-                toRet[x]=env[x]
-            return toRet
+            if typeof (a = env.get name) is "function"
+                return a @, env, args...

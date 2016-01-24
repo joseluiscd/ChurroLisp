@@ -2,6 +2,10 @@ Interpreter = require("../lib/interpreter")
 
 main = ->
     a = new Interpreter()
-    console.log a.exec(["if", true, ["list", 2, ["if", false, 9, 0], 5], 5])
 
+    f="(if 1 (list 2 (if 0 9 0) 5) 5)"
+    f = a.load f
+
+
+    console.log a.exec f
 main()

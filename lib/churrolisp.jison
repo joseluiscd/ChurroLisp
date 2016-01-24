@@ -6,11 +6,12 @@
 "("                              return '(';
 ")"                              return ')';
 [\"\']([^\"\'\\]|\\.)*[\"\']     return 'STRING';
-[*/+-^!?]                        return 'OPERATOR';
-\w+                              return 'WORD';
+"true"|"false"                   return 'BOOLEAN'
+[\w*/+-^!?+#]+                   return 'VAR';
 <<EOF>>                          return 'EOF';
 
 /lex
+
 
 %start global
 
@@ -19,10 +20,18 @@
 global:
     expression EOF{
         console.log($1);
+        return $1;
     };
 
 expression:
-    list | NUMBER | OPERATOR | WORD
+    list |
+    NUMBER{
+        $$ = parseFloat($1);
+    }
+    |
+    VAR{
+        $$ = new yy.Variable($1);
+    }
     |
     STRING {
         $$ = $1.replace(/^"|"$/g, "");
