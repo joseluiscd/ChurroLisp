@@ -8,4 +8,19 @@ main = ->
 
 
     console.log a.exec f
+
+    x = """
+    (seq
+        (set a 4)
+        (set b 5)
+        (seq
+            (print (var a))
+            (set x 5)
+        )
+        (print (var x))
+    )
+    """
+
+    x = a.load x
+    console.log a.exec x
 main()

@@ -15,9 +15,10 @@ parser that Jison generated for us:
     module.exports = class Interpreter
         globalenv: new Environment
         defaultFuncs: {
-            "list": (i, env, args...) -> return args
-            "declare": (i, env, args...) -> env[name]=null
-            "set": (i, env, name, value) -> env[name]=value
+            #"list": (i, env, args...) -> return args
+            "declare": (i, env, args...) -> env.set name, null
+            "set": (i, env, name, value) -> env.set name, value
+            "var": (i, env, name) -> return env.get name
             "if": (i, env, cond, t, f) ->
                 if cond
                     i.evaluate t, env.sub()
@@ -25,17 +26,26 @@ parser that Jison generated for us:
                     i.evaluate f, env.sub()
 
             "+": (i, env, a, b) -> return i.evaluate a,env + i.evaluate b,env
+            "list": (i, env, expressions...) ->
+                newenv = env.sub()
+                a = for x in expressions
+                    i.evaluate x, newenv
+                return a
+
+            "print": (i, env, expression) -> console.log i.evaluate expression,env
 
             "seq": (i, env, expressions...) -> #Sequential
                 ret=null
+                newenv = env.sub()
                 for x in expressions
-                    ret = i.evaluate x, env
+                    ret = i.evaluate x, newenv
                 return ret
 
             "co": (i, env, expressions...) -> #Concurrent (""Concurrent"")
                 ret = null
+                newenv = env.sub()
                 for x in expressions
-                    process.nextTick i.evaluate x, env
+                    process.nextTick i.evaluate x, newenv
                 return ret
 
         }
@@ -68,7 +78,9 @@ This is the recursive function that will evaluate an expression
                 if list instanceof Array and list.length isnt 0
                     #This is a function!!!
                     if list[0] instanceof Variable then return @call list[0].name, list[1..], env
-                    else return list
+                    else
+                        newenv = env.sub()
+                        return [@evaluate x, newenv for x in list]
                 else
                     return null
             else
