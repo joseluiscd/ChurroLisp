@@ -1,26 +1,12 @@
-Interpreter = require("../lib/interpreter")
+Interpreter = require "../lib/interpreter"
+expect = require("chai").expect
 
-main = ->
-    a = new Interpreter()
+describe "compiler", ->
+    it "compiles simple statements", (done)->
+        lisp = new Interpreter()
+        f="(if 1 5 7)"
+        x = lisp.load f
+        console.log x
 
-    f="(if 1 (list 2 (if 0 9 0) 5) 5)"
-    f = a.load f
-
-
-    console.log a.exec f
-
-    x = """
-    (seq
-        (set a 4)
-        (set b 5)
-        (seq
-            (print (var a))
-            (set x 5)
-        )
-        (print (var x))
-    )
-    """
-
-    x = a.load x
-    console.log a.exec x
-main()
+        expect(x).to.deep.equal [{name: "if"}, 1, 5, 7]
+        done()
