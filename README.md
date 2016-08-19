@@ -1,4 +1,6 @@
 # ChurroLisp
-A trivial implementation of Lisp in JavaScript/CoffeeScript. It uses [Jison](https://github.com/zaach/jison) to build the grammar.
+A trivial and incomplete implementation of Lisp-like language in JavaScript/CoffeeScript. It uses [Jison](https://github.com/zaach/jison) for the parser.
 
-There are some functions that are working, but environment management must be improved.
+There are some functions that are working.
+
+(This project is abandoned for the moment)
